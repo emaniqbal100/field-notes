@@ -1,7 +1,6 @@
-// app/api/posts/[id]/route.js
-// GET    -> ek post detail (id se)
-// PATCH  -> post edit/update karna
-// DELETE -> post delete karna (comments bhi cascade se delete hongi)
+// app/api/posts/[id]/comments/route.js
+// GET  -> ek post ki saari comments
+// POST -> naya comment add karna
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -9,62 +8,44 @@ import { NextResponse } from "next/server";
 export async function GET(request, { params }) {
   try {
     const { id: idParam } = await params;
-    const id = Number(idParam);
-    const post = await prisma.post.findUnique({ where: { id } });
-
-    if (!post) {
-      return NextResponse.json({ error: "Post nahi mila" }, { status: 404 });
-    }
-
-    return NextResponse.json(post);
+    const postId = Number(idParam);
+    const comments = await prisma.comment.findMany({
+      where: { postId },
+      orderBy: { createdAt: "asc" },
+    });
+    return NextResponse.json(comments);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Post fetch nahi ho saka" },
+      { error: "Comments fetch nahi ho sakay" },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(request, { params }) {
+export async function POST(request, { params }) {
   try {
     const { id: idParam } = await params;
-    const id = Number(idParam);
+    const postId = Number(idParam);
     const body = await request.json();
-    const { title, content } = body;
+    const { author, body: commentBody } = body;
 
-    if (!title || !content) {
+    if (!author || !commentBody) {
       return NextResponse.json(
-        { error: "Title aur content dono zaroori hain" },
+        { error: "Naam aur comment dono zaroori hain" },
         { status: 400 }
       );
     }
 
-    const updated = await prisma.post.update({
-      where: { id },
-      data: { title, content },
+    const comment = await prisma.comment.create({
+      data: { author, body: commentBody, postId },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(comment, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Post update nahi ho saka" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request, { params }) {
-  try {
-    const { id: idParam } = await params;
-    const id = Number(idParam);
-    await prisma.post.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Post delete nahi ho saka" },
+      { error: "Comment save nahi ho saka" },
       { status: 500 }
     );
   }
