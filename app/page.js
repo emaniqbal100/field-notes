@@ -4,6 +4,9 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
+// Is page ko static cache na kiya jaye - har request par fresh DB se data laaya jaye
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const posts = await prisma.post.findMany({
     orderBy: { createdAt: "desc" },
