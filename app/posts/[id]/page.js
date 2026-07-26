@@ -7,6 +7,8 @@ import { notFound } from "next/navigation";
 import DeletePostButton from "@/components/DeletePostButton";
 import CommentForm from "@/components/CommentForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function PostDetailPage({ params }) {
   const { id: idParam } = await params;
   const id = Number(idParam);
